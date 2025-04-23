@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Puzzle Image Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(45deg, #ff6b6b, #f9a825, #0ff, #00f);
+      background-size: 400% 400%;
+      animation: gradientAnimation 10s ease infinite;
+      color: white;
+      text-align: center;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #upload {
+      margin: 20px;
+      padding: 10px;
+      font-size: 1rem;
+      border: 2px solid #fff;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #puzzle {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 2px;
+      margin: 20px auto;
+    }
+    .tile {
+      width: 100px;
+      height: 100px;
+      background-size: 300px 300px;
+      cursor: move;
+      transition: transform 0.3s ease;
+    }
+
+    /* Gradient background animation */
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Optional hover effect on puzzle tiles */
+    .tile:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <h1>🧩 Puzzle Image Generator</h1>
+  <input type="file" id="upload" accept="image/*">
+  <div id="puzzle"></div>
+
+  <script>
+    const upload = document.getElementById('upload');
+    const puzzle = document.getElementById('puzzle');
+
+    let positions = [];
+
+    upload.addEventListener('change', function () {
+      const file = upload.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => createPuzzle(reader.result);
+      reader.readAsDataURL(file);
+    });
+
+    function createPuzzle(src) {
+      puzzle.innerHTML = '';
+      positions = [];
+      const indices = [...Array(9).keys()].sort(() => Math.random() - 0.5);
+
+      indices.forEach((index, i) => {
+        const x = (index % 3) * -100;
+        const y = Math.floor(index / 3) * -100;
+        const div = document.createElement('div');
+        div.className = 'tile';
+        div.style.backgroundImage = `url(${src})`;
+        div.style.backgroundPosition = `${x}px ${y}px`;
+        div.setAttribute('draggable', 'true');
+        div.dataset.pos = index;
+        puzzle.appendChild(div);
+      });
+
+      addDragListeners();
+    }
+
+    function addDragListeners() {
+      let dragged;
+
+      puzzle.querySelectorAll('.tile').forEach(tile => {
+        tile.addEventListener('dragstart', e => {
+          dragged = tile;
+        });
+
+        tile.addEventListener('dragover', e => e.preventDefault());
+
+        tile.addEventListener('drop', e => {
+          const clone1 = dragged.cloneNode(true);
+          const clone2 = tile.cloneNode(true);
+          puzzle.replaceChild(clone1, tile);
+          puzzle.replaceChild(clone2, dragged);
+          addDragListeners(); // Reapply events to new nodes
+        });
+      });
+    }
+  </script>
+</body>
+</html>
